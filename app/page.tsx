@@ -2,7 +2,6 @@
 'use client';
 import { Suspense } from 'react';
 import StudentTable from '@/components/StudentTable';
-import QRCode from '@/components/QRCodeModal';
 
 export default function Home() {
   return (
