@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock } from 'lucide-react';
 import { StudentData } from '@/backend/lib/googleSheets';
 import SearchBar from './SearchBar';
 
