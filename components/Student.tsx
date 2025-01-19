@@ -10,7 +10,7 @@ interface StudentProps {
   onPaymentInitiate: (month: string, studentId: string) => Promise<void>;
 }
 
-export default function Student({ students, onPaymentInitiate }: StudentProps) {
+export default function Student({ students }: StudentProps) {
   const [filteredStudents, setFilteredStudents] = useState(students);
 
   const months = [
