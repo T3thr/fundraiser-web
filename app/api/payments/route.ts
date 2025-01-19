@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: error.message },
       { status: 500 }
     );
   }
