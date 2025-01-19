@@ -1,15 +1,17 @@
-// src/backend/lib/mongodb.ts
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/fundraising';
-
-export async function connectDB() {
-  try {
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(MONGODB_URI);
-      console.log('Connected to MongoDB');
+const mongodbConnect = async () => {
+    if (mongoose.connection.readyState === 1) return; // Already connected
+    try {
+        mongoose.set("strictQuery", false);
+        await mongoose.connect(process.env.MONGODB_URI as string, {
+            dbName: "Fundraiser",
+        });
+        console.log("Database Connected!");
+    } catch (error: any) {
+        console.error("Database Connection Error:", error.message);
+        throw new Error(error.message);
     }
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-  }
-}
+};
+
+export default mongodbConnect;

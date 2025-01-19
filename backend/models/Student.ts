@@ -1,20 +1,31 @@
-// app/models/Student.ts
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-interface IStudent extends Document {
-  name: string;
-  paymentStatus: {
-    [key: string]: 'paid' | 'unpaid';
-  };
-}
-
-const StudentSchema = new Schema({
-  name: { type: String, required: true },
-  paymentStatus: {
-    type: Map,
-    of: String,
-    default: {}
-  }
+const paymentSchema = new mongoose.Schema({
+  month: String,
+  year: Number,
+  status: {
+    type: String,
+    enum: ['pending', 'paid'],
+    default: 'pending'
+  },
+  paymentDate: Date,
+  amount: Number,
+  transactionId: String
 });
 
-export const Student = mongoose.models.Student || mongoose.model<IStudent>('Student', StudentSchema);
+const studentSchema = new mongoose.Schema({
+  studentId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  payments: [paymentSchema]
+}, {
+  timestamps: true
+});
+
+export default mongoose.models.Student || mongoose.model('Student', studentSchema);

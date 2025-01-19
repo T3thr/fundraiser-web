@@ -1,21 +1,184 @@
+/* Import Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
+  /* Root-level color and theme variables */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #1f2937;
+    --card: #ffffff;
+    --card-foreground: #1f2937;
+    --popover: #ffffff;
+    --popover-foreground: #1f2937;
+    --primary: #0066cc;
+    --primary-foreground: #ffffff;
+    --secondary: #e0e7ff;
+    --secondary-foreground: #1f2937;
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+    --accent: #38bdf8;
+    --accent-foreground: #1f2937;
+    --destructive: #f87171;
+    --destructive-foreground: #ffffff;
+    --border: #d1d5db;
+    --input: #e5e7eb;
+    --ring: #0066cc;
+    --radius: 0.5rem;
+    --transition-duration: 300ms;
+    --scrollbar-width: 12px;
+  }
+
+  /* Dark mode variables */
+  .dark {
+    --background: #111827;
+    --foreground: #d1d5db;
+    --card: #111827;
+    --card-foreground: #d1d5db;
+    --popover: #111827;
+    --popover-foreground: #d1d5db;
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #374151;
+    --secondary-foreground: #d1d5db;
+    --muted: #1f2937;
+    --muted-foreground: #9ca3af;
+    --accent: #0ea5e9;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #374151;
+    --input: #1f2937;
+    --ring: #2563eb;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Global styles for font and layout */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased transition-all duration-[var(--transition-duration)];
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+    transition: color var(--transition-duration) ease;
+  }
+
+  a:hover {
+    color: var(--primary);
+  }
+
+  /* Scrollbar customization */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+  }
+
+  /* Scrollbar Thumb */
+  ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    transition: background-color var(--transition-duration);
+  }
+
+  /* Scrollbar Track */
+  ::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+  }
+
+  /* Light Mode Scrollbar */
+  :root {
+    --scrollbar-thumb: rgba(156, 163, 175, 0.5); /* Light mode scrollbar thumb */
+    --scrollbar-track: #f3f4f6; /* Light mode scrollbar track */
+  }
+
+  /* Dark Mode Scrollbar */
+  .dark {
+    --scrollbar-thumb: rgba(156, 163, 175, 0.8); /* Dark mode scrollbar thumb */
+    --scrollbar-track: #1f2937; /* Dark mode scrollbar track */
+  }
+
+  /* Apply the light/dark scrollbar colors */
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--scrollbar-track);
+  }
+
+  /* Scrollbar visibility for touchscreens */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Transitions, animations, and hover effects */
+@layer components {
+  .transition-all {
+    transition: all var(--transition-duration) ease;
+  }
+
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+  }
+
+  .focus\:outline-none:focus {
+    outline: none;
+  }
+
+  .hover\:bg-opacity-80:hover {
+    background-color: rgba(0, 102, 204, 0.8);
+  }
+
+  .hover\:bg-opacity-90:hover {
+    background-color: rgba(0, 102, 204, 0.9);
+  }
+
+  /* Smooth text shadow for focus */
+  .focus\:text-shadow:focus {
+    text-shadow: 0 0 5px rgba(0, 102, 204, 0.5);
+  }
+}
+
+/* Enhanced UI components styling */
+.table-container {
+  @apply w-full overflow-x-auto shadow-md sm:rounded-lg;
+}
+
+.data-table {
+  @apply w-full text-sm text-left;
+}
+
+.table-header {
+  @apply text-xs uppercase bg-gray-50 dark:bg-gray-700;
+}
+
+.table-cell {
+  @apply px-6 py-4 font-medium whitespace-nowrap;
+}
+
+.status-paid {
+  @apply px-2 py-1 text-xs font-semibold text-green-900 bg-green-200 rounded-full;
+}
+
+.status-unpaid {
+  @apply px-2 py-1 text-xs font-semibold text-red-900 bg-red-200 rounded-full;
+}
+
+.payment-button {
+  @apply inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800;
 }
