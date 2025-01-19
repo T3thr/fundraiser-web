@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { StudentData } from '@/backend/lib/googleSheets';
 import SearchBar from './SearchBar';
 import PaymentButton from './PaymentButton';
