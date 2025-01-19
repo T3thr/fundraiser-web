@@ -6,12 +6,12 @@ import Student from '@/backend/models/Student';
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+    apiVersion: '2024-12-18.acacia',
 });
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
-  const signature = headers().get("stripe-signature")!;
+  const signature = (await headers()).get("stripe-signature")!;
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    const errorMessage = (error as Error).message;
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 }
