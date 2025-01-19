@@ -5,7 +5,18 @@ import { JWT } from 'google-auth-library';
 export interface StudentData {
   no: string;
   id: string;
+  nickname: string;
   name: string;
+  jul: string;
+  aug: string;
+  sep: string;
+  nov: string;
+  oct: string;
+  dec: string;
+  jan: string;
+  feb: string;
+  mar: string;
+  note: string;
   payments?: PaymentData[];
 }
 
@@ -19,9 +30,9 @@ export interface PaymentData {
 export class GoogleSheetsService {
   private client: JWT;
   private sheets: any;
-  private readonly SPREADSHEET_ID = '1NsIzGV38P-fEyQKCSdXw7Ph8Kr0p70jh4tMSPFnyEEU';
-  private readonly SHEET_NAME = 'reg'; // Add your sheet name here
-  private readonly RANGE = `${this.SHEET_NAME}!A2:C`; // Update range to include sheet name
+  private readonly SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || ''; // Use environment variable for spreadsheet ID
+  private readonly SHEET_NAME = 'รายชื่อ67'; // Add your sheet name here
+  private readonly RANGE = `${this.SHEET_NAME}!A6:O`; // Update range to include sheet name
 
   constructor() {
     this.client = new JWT({
@@ -42,8 +53,19 @@ export class GoogleSheetsService {
 
       return response.data.values.map((row: any[]): StudentData => ({
         no: row[0],
-        id: row[1],
-        name: row[2],
+        name: row[1],
+        nickname: row[2],
+        id: row[3],
+        jul: row[4],
+        aug: row[5],
+        sep: row[6],
+        oct: row[7],
+        nov: row[8],
+        dec: row[9],
+        jan: row[10],
+        feb: row[11],
+        mar: row[12],
+        note: row[13],
         payments: [] // Initialize empty payments array
       }));
     } catch (error) {
