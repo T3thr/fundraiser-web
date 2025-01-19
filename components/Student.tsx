@@ -29,49 +29,52 @@ export default function Student({ students, onPaymentInitiate }: StudentProps) {
   };
 
   return (
-    <div>
+    <div className="p-4">
       <SearchBar onSearch={handleSearch} />
-      <table className="w-full text-sm text-left bg-card text-card-foreground">
-        <thead className="text-xs uppercase bg-muted text-muted-foreground rounded-lg sticky top-0 z-10">
-          <tr>
-            <th className="p-4">No.</th>
-            <th className="p-4">Student ID</th>
-            <th className="p-4">Name</th>
-            {months.map((month) => (
-              <th key={month} className="p-4 text-center">
-                {month.slice(0, 3)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredStudents.map((student) => (
-            <tr
-              key={student.id}
-              className="border-b border-border hover:bg-muted transition-colors"
-            >
-              <td className="p-4 font-medium text-foreground">{student.no}</td>
-              <td className="p-4 text-foreground">{student.id}</td>
-              <td className="p-4 text-foreground">{student.name}</td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm text-left bg-card text-card-foreground">
+          <thead className="text-xs uppercase bg-muted text-muted-foreground rounded-lg sticky top-0 z-10">
+            <tr>
+              <th className="p-4">No.</th>
+              <th className="p-4">Student ID</th>
+              <th className="p-4">Name</th>
               {months.map((month) => (
-                <td key={month} className="p-4 text-center">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex justify-center"
-                  >
-                    <button
-                      onClick={() => onPaymentInitiate(month, student.id)}
-                      className="flex items-center gap-2 px-3 py-1 bg-destructive text-xs font-medium text-primary-foreground bg-primary rounded-full hover:bg-opacity-90 transition-colors duration-200"
-                    >
-                      Pay Now
-                    </button>
-                  </motion.div>
-                </td>
+                <th key={month} className="p-4 text-center">
+                  {month.slice(0, 3)}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredStudents.map((student) => (
+              <tr
+                key={student.id}
+                className="border-b border-border hover:bg-muted transition-colors"
+              >
+                <td className="p-4 font-medium text-foreground">{student.no}</td>
+                <td className="p-4 text-foreground">{student.id}</td>
+                <td className="p-4 text-foreground">{student.name}</td>
+                {months.map((month) => (
+                  <td key={month} className="p-4 text-center">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="flex justify-center"
+                    >
+                      <button
+                        onClick={() => onPaymentInitiate(month, student.id)}
+                        className="flex items-center gap-2 px-3 py-1 bg-destructive text-xs font-medium text-primary-foreground rounded-full hover:bg-opacity-90 transition-colors duration-200"
+                        aria-label={`Pay ${month} for ${student.name}`}
+                      >
+                        Pay Now
+                      </button>
+                    </motion.div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
