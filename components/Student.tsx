@@ -31,13 +31,13 @@ export default function Student({ students, onPaymentInitiate }: StudentProps) {
   return (
     <div className="p-4">
       <SearchBar onSearch={handleSearch} />
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left bg-card text-card-foreground">
-          <thead className="text-xs uppercase bg-muted text-muted-foreground rounded-lg sticky top-0 z-10">
+      <div className="overflow-x-auto -mx-4 rounded-2xl">
+        <table className="min-w-full text-sm text-left bg-card text-card-foreground rounded-lg">
+          <thead className="text-xs uppercase bg-muted text-muted-foreground sticky -top-3 pt-16 z-50">
             <tr>
               <th className="p-4">No.</th>
               <th className="p-4">Student ID</th>
-              <th className="p-4">Name</th>
+              <th className="p-4 pr-40">Name</th>
               {months.map((month) => (
                 <th key={month} className="p-4 text-center">
                   {month.slice(0, 3)}
