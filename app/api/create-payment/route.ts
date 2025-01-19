@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     await mongodbConnect();
 
     // Get the current theme from cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const themeCookie = cookieStore.get('theme');
     const currentTheme = themeCookie?.value || 'light';
 
