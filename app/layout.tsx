@@ -11,8 +11,8 @@ import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Class Fundraising Management",
-  description: "Manage monthly payments for your classroom",
+  title: "CPE Fundraising",
+  description: "มาสร้างวินัยทางการเงินกันเถอะ",
 };
 
 // Define the layout structure using an async function to connect to the database and handle cookies

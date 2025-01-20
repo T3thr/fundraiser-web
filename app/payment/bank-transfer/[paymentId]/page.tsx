@@ -4,9 +4,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Copy, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-
-const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY!);
 
 interface BankTransferDetails {
   bankName: string;
@@ -50,32 +47,6 @@ export default function BankTransferPage({ params }: { params: { paymentId: stri
       setTimeout(() => setCopied(null), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
-    }
-  };
-
-  const handleStripeCheckout = async () => {
-    const stripe = await stripePromise;
-    if (!stripe) {
-      setError('Stripe failed to load');
-      return;
-    }
-
-    // Make an API call to create a Stripe session
-    const response = await fetch(`/api/payment/stripe-session/${params.paymentId}`);
-    const session = await response.json();
-
-    if (session.error) {
-      setError(session.error);
-      return;
-    }
-
-    // Redirect to the Stripe Checkout page
-    const { error: stripeError } = await stripe.redirectToCheckout({
-      sessionId: session.id,
-    });
-
-    if (stripeError) {
-      setError(stripeError.message || 'An unknown error occurred');
     }
   };
 
@@ -159,10 +130,10 @@ export default function BankTransferPage({ params }: { params: { paymentId: stri
 
           <div className="mt-8 space-y-4">
             <button
-              onClick={handleStripeCheckout}
+              onClick={() => router.push(`/payment/upload-slip/${params.paymentId}`)}
               className="w-full bg-primary text-primary-foreground rounded-lg py-3 px-4 hover:bg-opacity-90 transition-all duration-200 flex items-center justify-center space-x-2"
             >
-              <span>Pay via Stripe</span>
+              <span>Upload Payment Slip</span>
             </button>
             <button
               onClick={() => router.back()}
