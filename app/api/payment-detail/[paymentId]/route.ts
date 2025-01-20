@@ -1,26 +1,29 @@
-// @/app/api/payment-details/[paymentId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
+import { RouteHandlerContext } from 'next/dist/server/web/adapter';
 
 // Define an interface for the payment object
 interface Payment {
-    createdAt: Date;
-    status: string;
-    paymentMethod: string; // Add paymentMethod to the interface
-    bankDetails?: {
-        bankName: string;
-        accountNumber: string;
-        accountName: string;
-        reference: string;
-    };
-    // Add other properties as needed
+  createdAt: Date;
+  status: string;
+  paymentMethod: string; // Add paymentMethod to the interface
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+    reference: string;
+  };
+  // Add other properties as needed
 }
 
-export async function GET(request: NextRequest, { params }: { params: { paymentId: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: RouteHandlerContext<{ paymentId: string }>
+) {
   try {
-    // Access paymentId from params
-    const { paymentId } = params;
+    // Access paymentId from context params
+    const { paymentId } = context.params;
 
     await mongodbConnect();
     const paymentData = await PaymentModel.findById(paymentId)
@@ -39,7 +42,6 @@ export async function GET(request: NextRequest, { params }: { params: { paymentI
       createdAt: paymentData.createdAt,
       status: paymentData.status,
       paymentMethod: paymentData.paymentMethod,
-      // Include other properties as needed
     };
 
     // Add bank details for bank transfers
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: { paymentI
         bankName: process.env.BANK_NAME || 'Default Bank Name',
         accountNumber: process.env.BANK_ACCOUNT_NUMBER || '0000000000',
         accountName: process.env.BANK_ACCOUNT_NAME || 'Default Account Name',
-        reference: paymentData.reference
+        reference: paymentData.reference,
       };
     }
 
