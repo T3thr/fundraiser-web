@@ -17,13 +17,13 @@ interface Payment {
     // Add other properties as needed
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { paymentId: string } }
-) {
+export async function GET(request: NextRequest, context: { params: { paymentId: string } }) {
   try {
+    // Access paymentId from params
+    const { paymentId } = context.params;
+
     await mongodbConnect();
-    const paymentData = await PaymentModel.findById(params.paymentId)
+    const paymentData = await PaymentModel.findById(paymentId)
       .select('-__v')
       .lean();
 
