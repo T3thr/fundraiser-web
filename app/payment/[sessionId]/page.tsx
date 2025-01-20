@@ -38,6 +38,7 @@ export default function PaymentPage() {
     <div className="min-h-screen flex items-center justify-center">
       {status === 'loading' && <div>Preparing payment...</div>}
       {status === 'error' && <div>Payment failed. Please try again.</div>}
+      {status === 'success' && <div>ขอบคุณที่ชำระเงิน.</div>}
     </div>
   );
 }
