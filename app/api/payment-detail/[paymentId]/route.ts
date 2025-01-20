@@ -1,3 +1,4 @@
+// @/app/api/payment-details/[paymentId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
@@ -18,11 +19,11 @@ interface Payment {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { paymentId: string } }
+  context: { params: { paymentId: string } }  // Fix: Specify the correct type for context
 ) {
   try {
     // Access paymentId from context params
-    const { paymentId } = params;
+    const { paymentId } = context.params;
 
     await mongodbConnect();
     const paymentData = await PaymentModel.findById(paymentId)
