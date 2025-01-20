@@ -16,7 +16,16 @@ export function middleware(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
     });
   }
-  
+
+  // Check if the request is for the success or cancel page
+  const isSuccessPage = request.nextUrl.pathname === '/payment/success';
+  const isCancelPage = request.nextUrl.pathname === '/payment/cancel';
+
+  if ((isSuccessPage || isCancelPage) && !request.nextUrl.searchParams.has('session_id')) {
+    // If session_id is missing, return 404
+    return NextResponse.rewrite(new URL('/404', request.url));
+  }
+
   return response;
 }
 

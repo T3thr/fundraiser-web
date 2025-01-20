@@ -73,6 +73,19 @@ export class GoogleSheetsService {
       throw error;
     }
   }
+
+    // Add this method to get the authenticated client
+    public getClient() {
+      return this.client;
+    }
+
+  async updatePaymentStatus(studentId: string, month: string, amount: number): Promise<void> {
+    // Implementation for updating payment status in Google Sheets
+  }
+
+  async getSheetsInstance(): Promise<any> {
+    // Implementation for getting the sheets instance
+  }
 }
 
 export const sheetsService = new GoogleSheetsService();

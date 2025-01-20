@@ -12,9 +12,9 @@ export default function PaymentMethodSelector({ selectedMethod, onMethodSelect }
   const paymentMethods = [
     { id: 'card', name: 'Credit/Debit Card', icon: '💳' },
     { id: 'promptpay', name: 'PromptPay', icon: '📱' },
-    { id: 'bank_transfer', name: 'Bank Transfer', icon: '🏦' },
-    { id: 'truemoney', name: 'TrueMoney Wallet', icon: '👝' },
-    { id: 'rabbit_linepay', name: 'Rabbit LINE Pay', icon: '🐰' },
+    // { id: 'bank_transfer', name: 'Bank Transfer', icon: '🏦' },
+    // { id: 'truemoney', name: 'TrueMoney Wallet', icon: '👝' },
+    // { id: 'rabbit_linepay', name: 'Rabbit LINE Pay', icon: '🐰' },
   ];
 
   return (
