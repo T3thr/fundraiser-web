@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
-import { RouteHandlerContext } from 'next/dist/server/web/adapter';
 
 // Define an interface for the payment object
 interface Payment {
@@ -19,11 +18,11 @@ interface Payment {
 
 export async function GET(
   request: NextRequest,
-  context: RouteHandlerContext<{ paymentId: string }>
+  { params }: { params: { paymentId: string } }
 ) {
   try {
     // Access paymentId from context params
-    const { paymentId } = context.params;
+    const { paymentId } = params;
 
     await mongodbConnect();
     const paymentData = await PaymentModel.findById(paymentId)

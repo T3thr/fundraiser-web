@@ -90,7 +90,7 @@ export default function BankTransferPage({ params }: { params: { paymentId: stri
         <h1 className="text-2xl font-bold text-card-foreground mb-6 text-center">
           Bank Transfer Details
         </h1>
-        
+
         <div className="space-y-6">
           <div className="text-center mb-8">
             <p className="text-3xl font-bold text-primary mb-2">
