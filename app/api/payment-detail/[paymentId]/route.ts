@@ -19,7 +19,7 @@ interface Payment {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { paymentId: string } }  // Fix: Specify the correct type for context
+  context: { params: { paymentId: string } }  // Update: Ensure the type is correct
 ) {
   try {
     // Access paymentId from context params
