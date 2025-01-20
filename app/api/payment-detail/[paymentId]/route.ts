@@ -1,4 +1,5 @@
 // @/app/api/payment-details/[paymentId]/route.ts
+{/*
 import { NextRequest, NextResponse } from 'next/server';
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
@@ -63,3 +64,4 @@ export async function GET(
     );
   }
 }
+*/}
