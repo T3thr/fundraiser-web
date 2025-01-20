@@ -17,7 +17,7 @@ export default function TrueMoneyPaymentPage() {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null);
   const [phone, setPhone] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
@@ -26,8 +26,8 @@ export default function TrueMoneyPaymentPage() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         setPaymentStatus(data);
-      } catch (error) {
-        setError('Failed to load payment details');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load payment details');
       }
     };
 
@@ -37,7 +37,7 @@ export default function TrueMoneyPaymentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    setError('');
+    setError(null);
 
     try {
       const response = await fetch('/api/payments/truemoney', {
@@ -54,8 +54,8 @@ export default function TrueMoneyPaymentPage() {
       if (!response.ok) throw new Error(data.error);
 
       router.push(`/payment/success?session_id=${data.transactionId}`);
-    } catch (error) {
-      setError('Payment processing failed. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment processing failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -64,7 +64,7 @@ export default function TrueMoneyPaymentPage() {
   if (!paymentStatus) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        {/* <Loader2 className="w-8 h-8 animate-spin text-primary" /> */}
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -122,7 +122,7 @@ export default function TrueMoneyPaymentPage() {
             >
               {isProcessing ? (
                 <span className="flex items-center justify-center space-x-2">
-                  {/* <Loader2 className="w-4 h-4 animate-spin" /> */}
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Processing...</span>
                 </span>
               ) : (

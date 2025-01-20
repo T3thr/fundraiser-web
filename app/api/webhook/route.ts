@@ -1,9 +1,8 @@
-// @/app/api/webhook/route.ts
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
-import { google } from 'googleapis';
+import { google, sheets_v4 } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import Stripe from "stripe";
 
@@ -13,7 +12,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 // Initialize Google Sheets client with error handling
-const initializeGoogleClient = () => {
+const initializeGoogleClient = (): JWT => {
     try {
         return new JWT({
             email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -35,12 +34,12 @@ const MONTH_COLUMN_MAP: { [key: string]: string } = {
 
 // Helper function to update Google Sheets
 async function updateGoogleSheets(
-    sheets: any,
+    sheets: sheets_v4.Sheets,
     studentId: string,
     month: string,
     year: string,
     amount: number
-) {
+): Promise<void> {
     const columnLetter = MONTH_COLUMN_MAP[month.toLowerCase()];
     if (!columnLetter) {
         throw new Error(`Invalid month: ${month}`);
@@ -109,7 +108,7 @@ export async function POST(request: NextRequest) {
         );
 
         if (event.type === "checkout.session.completed") {
-            const session = event.data.object;
+            const session = event.data.object as Stripe.Checkout.Session;
             const { metadata } = session;
 
             if (!metadata?.studentId || !metadata?.month || !metadata?.year) {
