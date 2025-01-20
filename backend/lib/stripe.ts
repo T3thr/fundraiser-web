@@ -19,5 +19,9 @@ export interface PaymentIntent {
   year: string;
 }
 
-export const CURRENT_MONTH_FEE = 70; // THB
-export const LATE_PAYMENT_FEE = 80; // THB
+export const PAYMENT_CONFIGS = {
+    CURRENT_MONTH_FEE: 70,
+    LATE_PAYMENT_FEE: 80,
+    CURRENCY: 'thb',
+    PAYMENT_METHODS: ['card', 'promptpay', 'grabpay', 'truemoney'],
+  } as const;

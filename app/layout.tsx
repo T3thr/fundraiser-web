@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/context/Theme';
 import ChangeTheme from '@/components/ChangeTheme';
 import { cookies } from 'next/headers';
 import { GlobalProvider } from "./GlobalProvider";
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,8 +35,9 @@ export default async function RootLayout({
       <body className={inter.className}>
         <ThemeProvider initialTheme={initialTheme}>
           <GlobalProvider>
-            {children}
-            <ChangeTheme />
+                {children}  
+              <ChangeTheme />
+            <Analytics />
           </GlobalProvider>
         </ThemeProvider>
       </body>
