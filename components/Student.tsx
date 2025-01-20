@@ -35,12 +35,12 @@ export default function Student({ students }: StudentProps) {
     setFilteredStudents(filtered);
   };
 
-  const formatPaymentStatus = (value: string, studentId: string, month: string, year: number, rowNumber: number) => {
+  const formatPaymentStatus = (value: string | undefined, studentId: string, month: string, year: number, rowNumber: number) => {
     if (!rowNumber) {
       return <span className="font-medium">{value}</span>;
     }
 
-    const amount = parseInt(value) || 0;
+    const amount = parseInt(value || '0') || 0;
     const isOverdue = amount === 0;
 
     return (
