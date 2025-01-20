@@ -1,118 +1,166 @@
 // @/app/api/webhook/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import Stripe from 'stripe';
-import { google } from 'googleapis';
-import { JWT } from 'google-auth-library';
+import { headers } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
+import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
+import Stripe from "stripe";
 
-// Constants
-const MONTH_COLUMNS: Record<string, string> = {
+// Initialize Stripe with the latest API version
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2024-12-18.acacia',
+});
+
+// Initialize Google Sheets client with error handling
+const initializeGoogleClient = () => {
+    try {
+        return new JWT({
+            email: process.env.GOOGLE_CLIENT_EMAIL,
+            key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        });
+    } catch (error) {
+        console.error('Failed to initialize Google client:', error);
+        throw new Error('Google Sheets authentication failed');
+    }
+};
+
+// Month mapping for Google Sheets columns
+const MONTH_COLUMN_MAP: { [key: string]: string } = {
   'กรกฎาคม': 'E', 'สิงหาคม': 'F', 'กันยายน': 'G',
   'ตุลาคม': 'H', 'พฤศจิกายน': 'I', 'ธันวาคม': 'J',
   'มกราคม': 'K', 'กุมภาพันธ์': 'L', 'มีนาคม': 'M'
 };
 
-class GoogleSheetsService {
-  private client: JWT;
-  private sheets: any;
-
-  constructor() {
-    this.client = new JWT({
-      email: process.env.GOOGLE_CLIENT_EMAIL!,
-      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
-    });
-    this.sheets = google.sheets({ version: 'v4', auth: this.client });
-  }
-
-  async updatePaymentRecord(studentId: string, month: string, amount: number): Promise<void> {
-    const columnLetter = MONTH_COLUMNS[month];
+// Helper function to update Google Sheets
+async function updateGoogleSheets(
+    sheets: any,
+    studentId: string,
+    month: string,
+    year: string,
+    amount: number
+) {
+    const columnLetter = MONTH_COLUMN_MAP[month.toLowerCase()];
     if (!columnLetter) {
-      throw new Error(`Invalid month: ${month}`);
+        throw new Error(`Invalid month: ${month}`);
     }
 
     // Find student row
-    const { data: { values: rows } } = await this.sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-      range: 'รายชื่อ67!A6:D',
+    const studentResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: 'รายชื่อ67!A6:D',
     });
 
+    const rows = studentResponse.data.values;
     if (!rows?.length) {
-      throw new Error('No student data found');
+        throw new Error('No student data found');
     }
 
     const studentRowIndex = rows.findIndex((row: string[]) => row[3] === studentId);
     if (studentRowIndex === -1) {
-      throw new Error(`Student ID ${studentId} not found`);
+        throw new Error(`Student ID ${studentId} not found`);
     }
 
     const rowNumber = studentRowIndex + 6;
-    
-    // Update sheet
-    await this.sheets.spreadsheets.values.update({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID!,
-      range: `รายชื่อ67!${columnLetter}${rowNumber}`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [[amount.toFixed(2)]]
-      }
+
+    // Batch update for both sheets
+    await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        requestBody: {
+            valueInputOption: 'USER_ENTERED',
+            data: [
+                {
+                    range: `รายชื่อ67!${columnLetter}${rowNumber}`,
+                    values: [[amount.toFixed(2)]]
+                },
+                {
+                    range: 'payment_record!A:D',
+                    values: [[
+                        new Date().toISOString(),
+                        studentId,
+                        `${month} ${year}`,
+                        amount.toFixed(2)
+                    ]]
+                }
+            ]
+        }
     });
-  }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    await mongodbConnect();
-    const body = await req.text();
-    const headersObject = await headers();
-    const signature = headersObject.get('stripe-signature')!;
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.text();
+        const headersObject = await headers();
+        const signature = headersObject.get("stripe-signature");
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2024-12-18.acacia',
-    });
+        if (!signature) {
+            return NextResponse.json(
+                { error: 'Missing stripe signature' },
+                { status: 401 }
+            );
+        }
 
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+        // Verify Stripe webhook
+        const event = stripe.webhooks.constructEvent(
+            body,
+            signature,
+            process.env.STRIPE_WEBHOOK_SECRET!
+        );
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const { studentId, month, year } = session.metadata!;
+        if (event.type === "checkout.session.completed") {
+            const session = event.data.object;
+            const { metadata } = session;
 
-      // Update payment status
-      const payment = await PaymentModel.findOneAndUpdate(
-        { sessionId: session.id },
-        {
-          status: 'completed',
-          transactionId: session.payment_intent as string,
-          paidAt: new Date()
-        },
-        { new: true }
-      );
+            if (!metadata?.studentId || !metadata?.month || !metadata?.year) {
+                throw new Error("Invalid metadata in session");
+            }
 
-      if (!payment) {
-        throw new Error('Payment not found');
-      }
+            // Connect to MongoDB
+            await mongodbConnect();
 
-      // Update Google Sheets
-      const sheetsService = new GoogleSheetsService();
-      await sheetsService.updatePaymentRecord(
-        studentId,
-        month,
-        payment.amount
-      );
+            // Update payment record
+            const payment = await PaymentModel.findOneAndUpdate(
+                { sessionId: session.id },
+                {
+                    status: 'completed',
+                    paidAt: new Date(),
+                    transactionId: session.payment_intent as string,
+                },
+                { new: true }
+            );
+
+            if (!payment) {
+                throw new Error("Payment record not found");
+            }
+
+            // Initialize Google Sheets client
+            const googleClient = initializeGoogleClient();
+            const sheets = google.sheets({ version: 'v4', auth: googleClient });
+
+            // Update Google Sheets
+            await updateGoogleSheets(
+                sheets,
+                metadata.studentId,
+                metadata.month,
+                metadata.year,
+                session.amount_total ? session.amount_total / 100 : 70
+            );
+
+            return NextResponse.json({
+                received: true,
+                paymentId: payment._id
+            });
+        }
+
+        return NextResponse.json({ received: true });
+    } catch (error) {
+        console.error('Webhook error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        return NextResponse.json(
+            { error: errorMessage },
+            { status: 400 }
+        );
     }
-
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 400 }
-    );
-  }
 }
