@@ -48,16 +48,20 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   };
 
   return (
-    <button
-      onClick={handlePayment}
-      disabled={!isOverdue}
-      className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
-        isOverdue
-          ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700 cursor-pointer'
-          : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700'
-      }`}
-    >
-      {isOverdue ? 'Pay Now' : `${amount} ฿`}
-    </button>
+    <>
+      {amount !== undefined && amount !== null ? (
+        <button
+          onClick={handlePayment}
+          disabled={!isOverdue}
+          className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+            isOverdue
+              ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700 cursor-pointer'
+              : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700'
+          }`}
+        >
+          {isOverdue ? 'Pay Now' : `${amount} ฿`}
+        </button>
+      ) : null}
+    </>
   );
 }

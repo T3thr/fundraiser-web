@@ -43,6 +43,10 @@ export default function Student({ students }: StudentProps) {
     const amount = parseInt(value || '0') || 0;
     const isOverdue = amount === 0;
 
+    if (!value) {
+      return null;
+    }
+
     return (
       <PaymentButton
         amount={amount}
@@ -96,7 +100,14 @@ export default function Student({ students }: StudentProps) {
                 <td className="p-4">{student.id}</td>
                 {months.map(({ name, year }) => (
                   <td key={`${student.id}-${name}`} className="p-4 text-center">
-                    {formatPaymentStatus(student[name.toLowerCase().slice(0, 3) as keyof StudentData], student.id, name, year, parseInt(student.no))}
+                    {typeof student[name.toLowerCase().slice(0, 3) as keyof StudentData] === 'string' &&
+                      formatPaymentStatus(
+                        student[name.toLowerCase().slice(0, 3) as keyof StudentData] as string,
+                        student.id,
+                        name,
+                        year,
+                        parseInt(student.no)
+                      )}
                   </td>
                 ))}
                 <td className="p-4 text-left">{student.note}</td>
