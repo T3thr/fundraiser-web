@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     // Get the raw request body and Stripe signature
     const body = await req.text();
-    const stripeHeaders = headers(); // Use headers function without .get()
+    const stripeHeaders = Headers(); // Use headers function without .get()
     const signature = stripeHeaders.get('stripe-signature');
 
     if (!signature) {
