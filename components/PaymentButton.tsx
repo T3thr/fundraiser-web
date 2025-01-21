@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import { PaymentMethod } from '@/types/payment';
@@ -19,11 +19,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 
-  useEffect(() => {
-    calculateAmount();
-  }, [month, year]);
-
-  const calculateAmount = () => {
+  const calculateAmount = useCallback(() => {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
@@ -37,9 +33,12 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
     const paymentMonth = monthMap[month.toLowerCase()];
     const baseAmount = (currentYear < year || (currentYear === year && currentMonth <= paymentMonth)) ? 10 : 80;
     setCalculatedAmount(baseAmount);
-  };
+  }, [month, year]);
 
-  // Function to check payment status
+  useEffect(() => {
+    calculateAmount();
+  }, [calculateAmount]);
+
   const checkPaymentStatus = async (sessionId: string) => {
     try {
       const response = await fetch(`/api/check-payment-status/${sessionId}`);
@@ -48,12 +47,13 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       if (data.status === 'completed') {
         setPaymentStatus('completed');
         setIsProcessing(false);
-        router.refresh(); // Refresh the page to update payment status
+        router.refresh();
         return true;
       }
       return false;
     } catch (error) {
       console.error('Error checking payment status:', error);
+      setPaymentStatus('failed');
       return false;
     }
   };
@@ -80,6 +80,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       const data = await response.json();
 
       if (!response.ok) {
+        setPaymentStatus('failed');
         throw new Error(data.error || 'Payment initiation failed');
       }
 
@@ -99,9 +100,9 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
           if (isComplete) {
             clearInterval(checkInterval);
           }
-        }, 5000); // Check every 5 seconds
+        }, 5000);
 
-        // Clear interval after 5 minutes (max waiting time)
+        // Clear interval after 5 minutes
         setTimeout(() => {
           clearInterval(checkInterval);
         }, 300000);
@@ -116,16 +117,18 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
     }
   };
 
+  const buttonStateClass = paymentStatus === 'failed' 
+    ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
+    : isOverdue
+      ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
+      : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700';
+
   return (
     <>
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={!isOverdue || isProcessing}
-        className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
-          isOverdue
-            ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
-            : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700'
-        }`}
+        className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${buttonStateClass}`}
       >
         {isProcessing ? (
           <span className="flex items-center space-x-1">
@@ -139,6 +142,8 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
             </svg>
             <span>Processing...</span>
           </span>
+        ) : paymentStatus === 'failed' ? (
+          'Retry Payment'
         ) : isOverdue ? (
           'Pay Now'
         ) : (
