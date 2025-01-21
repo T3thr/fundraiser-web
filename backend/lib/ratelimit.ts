@@ -9,7 +9,7 @@ const redis = new Redis({
 
 // Extend NextRequest to include the ip property
 interface CustomNextRequest extends NextRequest {
-  ip?: string; // Optional property
+  ip?: string; 
 }
 
 export async function rateLimit(req: CustomNextRequest) {
