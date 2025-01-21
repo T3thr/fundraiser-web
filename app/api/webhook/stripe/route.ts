@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         throw new Error('Missing required metadata');
       }
 
-      const { studentId, month, year } = session.metadata;
+      const { studentId, month } = session.metadata;
 
       // Update payment status in MongoDB
       const payment = await PaymentModel.findOneAndUpdate(
