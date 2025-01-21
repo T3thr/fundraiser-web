@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     // Get the raw request body and Stripe signature
     const body = await req.text();
-    const signature = headers().get('stripe-signature');
+    const signature = headers().get('stripe-signature'); // Correctly fetch the header synchronously
 
     if (!signature) {
       console.error('No Stripe signature found');
