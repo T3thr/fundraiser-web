@@ -1,4 +1,5 @@
 // @/backend/services/PaymentService.ts
+{/** 
 import { PaymentModel } from '@/backend/models/Payment';
 import { sheetsService } from '@/backend/lib/googleSheets';
 import { PAYMENT_CONFIGS } from '@/backend/lib/constants';
@@ -85,3 +86,4 @@ export class PaymentService {
     }
   }
 }
+  */}
