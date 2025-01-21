@@ -38,30 +38,30 @@ class GoogleSheetsService {
   }
 
   async findStudentRow(studentId: string): Promise<number> {
-    try {
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: 'รายชื่อ67!A6:D',
-      });
+  try {
+    const response = await this.sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'รายชื่อ67!A6:D',
+    });
 
-      const rows = response.data.values;
-      if (!rows?.length) {
-        throw new Error('No student data found in sheet');
-      }
-
-      // Find the row with matching student ID (in column D)
-      const studentRowIndex = rows.findIndex(row => row[3] === studentId);
-      if (studentRowIndex === -1) {
-        throw new Error(`Student ID ${studentId} not found in sheet`);
-      }
-
-      // Add 6 because data starts from row 6
-      return studentRowIndex + 6;
-    } catch (error) {
-      console.error('Error finding student row:', error);
-      throw error;
+    const rows = response.data.values as string[][]; // Explicitly type rows as a 2D array of strings
+    if (!rows?.length) {
+      throw new Error('No student data found in sheet');
     }
+
+    // Find the row with matching student ID (in column D)
+    const studentRowIndex = rows.findIndex((row: string[]) => row[3] === studentId); // Ensure row is typed
+    if (studentRowIndex === -1) {
+      throw new Error(`Student ID ${studentId} not found in sheet`);
+    }
+
+    // Add 6 because data starts from row 6
+    return studentRowIndex + 6;
+  } catch (error) {
+    console.error('Error finding student row:', error);
+    throw error;
   }
+}
 
   async updatePaymentRecord(studentId: string, month: string, amount: number): Promise<void> {
     try {
