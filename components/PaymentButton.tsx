@@ -1,4 +1,3 @@
-// Fixed PaymentButton.tsx with proper template literals and routing
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PaymentMethodSelector from './PaymentMethodSelector';
@@ -18,30 +17,51 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 
   useEffect(() => {
-    const calculateAmount = () => {
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-
-      const monthMap: { [key: string]: number } = {
-        'january': 0, 'february': 1, 'march': 2, 'april': 3,
-        'may': 4, 'june': 5, 'july': 6, 'august': 7,
-        'september': 8, 'october': 9, 'november': 10, 'december': 11
-      };
-
-      const paymentMonth = monthMap[month.toLowerCase()];
-      const baseAmount = (currentYear < year || (currentYear === year && currentMonth <= paymentMonth)) ? 10 : 80;
-      setCalculatedAmount(baseAmount);
-    };
-
     calculateAmount();
   }, [month, year]);
+
+  const calculateAmount = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    const monthMap: { [key: string]: number } = {
+      'january': 0, 'february': 1, 'march': 2, 'april': 3,
+      'may': 4, 'june': 5, 'july': 6, 'august': 7,
+      'september': 8, 'october': 9, 'november': 10, 'december': 11
+    };
+
+    const paymentMonth = monthMap[month.toLowerCase()];
+    const baseAmount = (currentYear < year || (currentYear === year && currentMonth <= paymentMonth)) ? 10 : 80;
+    setCalculatedAmount(baseAmount);
+  };
+
+  // Function to check payment status
+  const checkPaymentStatus = async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/check-payment-status/${sessionId}`);
+      const data = await response.json();
+      
+      if (data.status === 'completed') {
+        setPaymentStatus('completed');
+        setIsProcessing(false);
+        router.refresh(); // Refresh the page to update payment status
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      return false;
+    }
+  };
 
   const handlePayment = async () => {
     try {
       setIsProcessing(true);
+      setPaymentStatus('processing');
 
       const response = await fetch('/api/create-payment', {
         method: 'POST',
@@ -63,28 +83,35 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
         throw new Error(data.error || 'Payment initiation failed');
       }
 
-      switch (selectedMethod) {
-        case 'bank_transfer':
-          router.push(`/payment/bank-transfer/${data.paymentId}`);
-          break;
-        case 'truemoney':
-          router.push(`/payment/truemoney/${data.paymentId}`);
-          break;
-        case 'rabbit_linepay':
-          router.push(`/payment/rabbit-linepay/${data.paymentId}`);
-          break;
-        case 'card':
-        case 'promptpay':
-          router.push(`/payment/${data.sessionId}`);
-          break;
-        default:
-          router.push(data.redirectUrl);
+      // Handle different payment methods
+      const paymentDestination = {
+        bank_transfer: `/payment/bank-transfer/${data.paymentId}`,
+        truemoney: `/payment/truemoney/${data.paymentId}`,
+        rabbit_linepay: `/payment/rabbit-linepay/${data.paymentId}`,
+        card: `/payment/${data.sessionId}`,
+        promptpay: `/payment/${data.sessionId}`,
+      }[selectedMethod] || data.redirectUrl;
+
+      // For card and promptpay payments, set up status checking
+      if (['card', 'promptpay'].includes(selectedMethod)) {
+        const checkInterval = setInterval(async () => {
+          const isComplete = await checkPaymentStatus(data.sessionId);
+          if (isComplete) {
+            clearInterval(checkInterval);
+          }
+        }, 5000); // Check every 5 seconds
+
+        // Clear interval after 5 minutes (max waiting time)
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 300000);
       }
+
+      router.push(paymentDestination);
     } catch (error) {
       console.error('Payment initiation failed:', error);
-      // Add error handling here
+      setPaymentStatus('failed');
     } finally {
-      setIsProcessing(false);
       setIsModalOpen(false);
     }
   };
