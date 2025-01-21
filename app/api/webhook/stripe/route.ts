@@ -1,6 +1,5 @@
 // @/app/api/webhook/stripe/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
@@ -28,7 +27,7 @@ class GoogleSheetsService {
       this.client = new JWT({
         email: process.env.GOOGLE_CLIENT_EMAIL,
         key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        scopes: ['https://www.googleapis.com/auth/spreadsheets']
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
       this.sheets = google.sheets({ version: 'v4', auth: this.client });
     } catch (error) {
@@ -38,30 +37,28 @@ class GoogleSheetsService {
   }
 
   async findStudentRow(studentId: string): Promise<number> {
-  try {
-    const response = await this.sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.GOOGLE_SHEET_ID,
-      range: 'รายชื่อ67!A6:D',
-    });
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
+        range: 'รายชื่อ67!A6:D',
+      });
 
-    const rows = response.data.values as string[][]; // Explicitly type rows as a 2D array of strings
-    if (!rows?.length) {
-      throw new Error('No student data found in sheet');
+      const rows = response.data.values as string[][]; // Explicitly type rows as a 2D array of strings
+      if (!rows?.length) {
+        throw new Error('No student data found in sheet');
+      }
+
+      const studentRowIndex = rows.findIndex((row: string[]) => row[3] === studentId);
+      if (studentRowIndex === -1) {
+        throw new Error(`Student ID ${studentId} not found in sheet`);
+      }
+
+      return studentRowIndex + 6; // Add 6 because data starts from row 6
+    } catch (error) {
+      console.error('Error finding student row:', error);
+      throw error;
     }
-
-    // Find the row with matching student ID (in column D)
-    const studentRowIndex = rows.findIndex((row: string[]) => row[3] === studentId); // Ensure row is typed
-    if (studentRowIndex === -1) {
-      throw new Error(`Student ID ${studentId} not found in sheet`);
-    }
-
-    // Add 6 because data starts from row 6
-    return studentRowIndex + 6;
-  } catch (error) {
-    console.error('Error finding student row:', error);
-    throw error;
   }
-}
 
   async updatePaymentRecord(studentId: string, month: string, amount: number): Promise<void> {
     try {
@@ -82,8 +79,8 @@ class GoogleSheetsService {
         range,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
-          values: [[amount.toFixed(2)]]
-        }
+          values: [[amount.toFixed(2)]],
+        },
       });
 
       console.log('Successfully updated Google Sheets');
@@ -96,14 +93,15 @@ class GoogleSheetsService {
 
 export async function POST(req: NextRequest) {
   console.log('Received webhook request');
-  
+
   try {
     // Connect to MongoDB
     await mongodbConnect();
 
     // Get the raw request body and Stripe signature
     const body = await req.text();
-    const signature = headers().get('stripe-signature'); // Correctly fetch the header synchronously
+    const stripeHeaders = headers(); // Use headers function without .get()
+    const signature = stripeHeaders.get('stripe-signature');
 
     if (!signature) {
       console.error('No Stripe signature found');
@@ -124,7 +122,7 @@ export async function POST(req: NextRequest) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      
+
       if (!session.metadata?.studentId || !session.metadata?.month) {
         throw new Error('Missing required metadata');
       }
@@ -137,7 +135,7 @@ export async function POST(req: NextRequest) {
         {
           status: 'completed',
           transactionId: session.payment_intent as string,
-          paidAt: new Date()
+          paidAt: new Date(),
         },
         { new: true }
       );
@@ -164,9 +162,9 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Webhook error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Webhook handler failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 400 }
     );
