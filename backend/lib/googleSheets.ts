@@ -28,17 +28,21 @@ export interface PaymentData {
 }
 
 export class GoogleSheetsService {
-  private client: JWT;
-  private sheets: any;
-  private readonly SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || ''; // Use environment variable for spreadsheet ID
-  private readonly SHEET_NAME = 'รายชื่อ67'; // Add your sheet name here
-  private readonly RANGE = `${this.SHEET_NAME}!A6:O`; // Update range to include sheet name
+  protected client: JWT;
+  protected sheets: any;
+  protected readonly SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '';
+  protected readonly SHEET_NAME = 'รายชื่อ67';
+  protected readonly RANGE = `${this.SHEET_NAME}!A6:O`;
 
   constructor() {
     this.client = new JWT({
       email: process.env.GOOGLE_CLIENT_EMAIL,
       key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+      // Update scopes to include write permission
+      scopes: [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/spreadsheets' // Add write permission
+      ]
     });
 
     this.sheets = google.sheets({ version: 'v4', auth: this.client });
@@ -66,7 +70,7 @@ export class GoogleSheetsService {
         feb: row[11],
         mar: row[12],
         note: row[13],
-        payments: [] // Initialize empty payments array
+        payments: []
       }));
     } catch (error) {
       console.error('Error fetching data from Google Sheets:', error);
@@ -74,17 +78,51 @@ export class GoogleSheetsService {
     }
   }
 
-    // Add this method to get the authenticated client
-    public getClient() {
-      return this.client;
+  async updatePaymentStatus(studentId: string, month: string, amount: number): Promise<boolean> {
+    try {
+      const monthToColumn: Record<string, string> = {
+        'กรกฎาคม': 'E',
+        'สิงหาคม': 'F',
+        'กันยายน': 'G',
+        'ตุลาคม': 'H',
+        'พฤศจิกายน': 'I',
+        'ธันวาคม': 'J',
+        'มกราคม': 'K',
+        'กุมภาพันธ์': 'L',
+        'มีนาคม': 'M'
+      };
+
+      // Find student row
+      const students = await this.getStudents();
+      const studentIndex = students.findIndex(s => s.id === studentId);
+      
+      if (studentIndex === -1) {
+        throw new Error(`Student with ID ${studentId} not found`);
+      }
+
+      const rowNumber = studentIndex + 6; // Adding 6 because data starts from row 6
+      const column = monthToColumn[month.toLowerCase()];
+      
+      if (!column) {
+        throw new Error(`Invalid month: ${month}`);
+      }
+
+      const range = `${this.SHEET_NAME}!${column}${rowNumber}`;
+
+      await this.sheets.spreadsheets.values.update({
+        spreadsheetId: this.SPREADSHEET_ID,
+        range,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[amount.toString()]]
+        }
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      throw error;
     }
-
-  async updatePaymentStatus(studentId: string, month: string, amount: number): Promise<void> {
-    // Implementation for updating payment status in Google Sheets
-  }
-
-  async getSheetsInstance(): Promise<any> {
-    // Implementation for getting the sheets instance
   }
 }
 

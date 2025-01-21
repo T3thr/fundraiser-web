@@ -32,7 +32,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       };
 
       const paymentMonth = monthMap[month.toLowerCase()];
-      const baseAmount = (currentYear < year || (currentYear === year && currentMonth <= paymentMonth)) ? 70 : 80;
+      const baseAmount = (currentYear < year || (currentYear === year && currentMonth <= paymentMonth)) ? 10 : 80;
       setCalculatedAmount(baseAmount);
     };
 
