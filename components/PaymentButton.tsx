@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog } from '@/components/ui/dialog';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import { PaymentMethod } from '@/types/payment';
-import { Loader2 } from 'lucide-react';
 
 interface PaymentButtonProps {
   amount: number;
@@ -15,13 +13,14 @@ interface PaymentButtonProps {
 
 export default function PaymentButton({ amount, studentId, month, year, isOverdue }: PaymentButtonProps) {
   const router = useRouter();
+  const modalRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'completed' | 'failed'>('pending');
 
-  // Prevent body scroll when modal is open
+  // Handle modal open/close effects
   useEffect(() => {
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -30,6 +29,21 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
     }
     return () => {
       document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
+  // Handle click outside modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        setIsModalOpen(false);
+      }
+    };
+    if (isModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isModalOpen]);
 
@@ -107,20 +121,16 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       }[selectedMethod] || data.redirectUrl;
 
       if (['card', 'promptpay'].includes(selectedMethod)) {
-        let checkCount = 0;
-        const maxChecks = 60; // 5 minutes with 5-second intervals
-
         const checkInterval = setInterval(async () => {
-          checkCount++;
           const isComplete = await checkPaymentStatus(data.sessionId);
-          
-          if (isComplete || checkCount >= maxChecks) {
+          if (isComplete) {
             clearInterval(checkInterval);
-            if (!isComplete && checkCount >= maxChecks) {
-              setPaymentStatus('failed');
-            }
           }
         }, 5000);
+
+        setTimeout(() => {
+          clearInterval(checkInterval);
+        }, 300000);
       }
 
       router.push(paymentDestination);
@@ -132,28 +142,30 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
     }
   };
 
-  const buttonStateClass = `
-    px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200
-    ${paymentStatus === 'failed' 
+  const buttonStateClass = paymentStatus === 'failed' 
+    ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
+    : isOverdue
       ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
-      : isOverdue
-        ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
-        : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700'
-    }
-    ${(!isOverdue || isProcessing) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-  `;
+      : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700';
 
   return (
     <>
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={!isOverdue || isProcessing}
-        className={buttonStateClass}
-        aria-label="Open payment modal"
+        className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${buttonStateClass} 
+          hover:scale-105 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isProcessing ? (
           <span className="flex items-center space-x-1">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
             <span>Processing...</span>
           </span>
         ) : paymentStatus === 'failed' ? (
@@ -165,15 +177,31 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
         )}
       </button>
 
-      <Dialog
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        modal
-      >
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50">
-          <div className="container flex items-center justify-center min-h-screen">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-2xl w-full mx-4 shadow-xl">
-              <h3 className="text-lg font-semibold mb-4">Select Payment Method</h3>
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden backdrop-blur-sm bg-black/50">
+          <div className="min-h-screen px-4 text-center">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+            <div
+              ref={modalRef}
+              className="inline-block w-full max-w-2xl p-6 my-8 text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg scale-95 animate-in fade-in duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Select Payment Method
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               <PaymentMethodSelector
                 selectedMethod={selectedMethod}
                 onMethodSelect={setSelectedMethod}
@@ -181,29 +209,24 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
               <div className="mt-6 flex justify-end space-x-4">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 transition-colors"
+                  className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700 
+                    transition-colors duration-200 transform hover:scale-105 active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePayment}
                   disabled={isProcessing}
-                  className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+                  className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 
+                    transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:transform-none"
                 >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    'Continue to Payment'
-                  )}
+                  {isProcessing ? 'Processing...' : 'Continue to Payment'}
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </Dialog>
+      )}
     </>
   );
 }
