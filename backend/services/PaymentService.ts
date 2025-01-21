@@ -1,7 +1,7 @@
 // @/backend/services/PaymentService.ts
-import { PaymentModel } from '../models/Payment';
-import { sheetsService } from '../lib/googleSheets';
-import { PAYMENT_CONFIGS } from '../lib/constants';
+import { PaymentModel } from '@/backend/models/Payment';
+import { sheetsService } from '@/backend/lib/googleSheets';
+import { PAYMENT_CONFIGS } from '@/backend/lib/constants';
 import mongodbConnect from '@/backend/lib/mongodb';
 
 export class PaymentService {
