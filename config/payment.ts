@@ -1,7 +1,7 @@
 // @/config/payment.ts
 export const PAYMENT_CONFIG = {
     FEES: {
-      CURRENT_MONTH: 70,
+      CURRENT_MONTH: 10,
       LATE_PAYMENT: 80,
       SPECIAL_EVENT: 100,
     },

@@ -1,4 +1,4 @@
-// @/app/api/webhooks/stripe/route.ts
+// @/app/api/webhook/stripe/route.ts
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/backend/lib/stripe';
