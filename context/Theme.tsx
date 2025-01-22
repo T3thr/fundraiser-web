@@ -10,13 +10,29 @@ export function ThemeProvider({ children, initialTheme = "light" }: { children: 
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
-    // Update cookie with secure settings
-    document.cookie = `theme=${newTheme}; path=/; max-age=31536000; SameSite=Strict`;
+
+    // Set cookie with "forever" expiration date (one year in the future)
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1); // Set cookie expiration to 1 year from now
+
+    document.cookie = `theme=${newTheme}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
   };
 
   useEffect(() => {
-    // Set initial theme when component mounts
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    // Check if there's an existing theme in cookies, otherwise use the passed initialTheme
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      if (match) return match[2];
+      return null;
+    };
+
+    const savedTheme = getCookie("theme");
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    } else {
+      document.documentElement.classList.toggle("dark", initialTheme === "dark");
+    }
   }, [initialTheme]);
 
   return (

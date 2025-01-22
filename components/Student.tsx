@@ -65,9 +65,9 @@ export default function Student({ students }: StudentProps) {
         <table className="min-w-full text-sm text-gray-800 dark:text-gray-200">
           <thead>
             <tr className="bg-gradient-to-r from-indigo-800 to-indigo-900 dark:from-gray-900 dark:to-gray-800 text-white">
-              <th className="p-4 text-left border-r-2 border-indigo-300 dark:border-indigo-900" colSpan={4}>Information</th>
-              <th className="p-4 text-center border-r-2 border-indigo-300 dark:border-indigo-900" colSpan={9}>Monthly Payments</th>
-              <th className="p-4 text-center border-indigo-300">Status</th>
+              <th className="p-4 text-left border-r-2 " colSpan={4}>Information</th>
+              <th className="p-4 text-center border-r-2 " colSpan={9}>Monthly Payments</th>
+              <th className="p-4 text-center ">Status</th>
             </tr>
           </thead>
           <thead>
@@ -75,13 +75,13 @@ export default function Student({ students }: StudentProps) {
               <th className="p-4 text-center">No.</th>
               <th className="p-4 pr-40 text-left">Name</th>
               <th className="p-4 -pr-6 text-left sticky left-0 bg-indigo-100 dark:bg-indigo-900 z-10">Nickname</th>
-              <th className="p-4 text-left">Student ID</th>
+              <th className="p-4 text-left border-r-2">Student ID</th>
               {months.map(({ name, year }) => (
                 <th key={`${name}-${year}`} className="p-4 text-center">
                   {`${name.slice(0, 3)} ${year}`}
                 </th>
               ))}
-              <th className="p-4 text-center">Note</th>
+              <th className="p-4 text-center border-l-2">Note</th>
             </tr>
           </thead>
           <tbody>
@@ -90,8 +90,8 @@ export default function Student({ students }: StudentProps) {
                 key={student.id}
                 className={`border-b border-gray-200 dark:border-gray-700 transition-colors ${
                   index % 2 === 0
-                    ? 'bg-gray-50 dark:bg-gray-800 hover:bg-indigo-100 dark:hover:bg-indigo-900'
-                    : 'bg-white dark:bg-gray-900 hover:bg-indigo-100 dark:hover:bg-indigo-900'
+                    ? 'bg-gray-50 dark:bg-gray-800 hover:bg-indigo-100 dark:hover:bg-indigo-800'
+                    : 'bg-white dark:bg-gray-900 hover:bg-indigo-100 dark:hover:bg-indigo-800'
                 }`}
               >
                 <td className="p-4 text-center font-medium">{student.no}</td>
