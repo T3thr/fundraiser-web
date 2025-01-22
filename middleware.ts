@@ -1,34 +1,42 @@
-// @/middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+// middleware.ts (in root directory)
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  
-  // Get theme from URL if present
-  const themeParam = request.nextUrl.searchParams.get('theme');
-  
-  if (themeParam) {
-    // Set the theme cookie
-    response.cookies.set('theme', themeParam, {
-      path: '/',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
+  // Get the pathname of the request
+  const path = request.nextUrl.pathname
+
+  // Check if the path is payment-related
+  if (path.startsWith('/payment')) {
+    const searchParams = request.nextUrl.searchParams
+    const sessionId = searchParams.get('session_id')
+
+    // If accessing success/cancel pages without session_id, redirect to home
+    if ((path.includes('/success') || path.includes('/cancel')) && !sessionId) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+
+    // For the payment session page, check if sessionId exists in the path
+    if (path.match(/^\/payment\/[^/]+$/)) {
+      const pathSessionId = path.split('/').pop()
+      
+      if (!pathSessionId || pathSessionId === 'success' || pathSessionId === 'cancel') {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+
+      // Optional: Verify session ID format (assuming Stripe session ID format)
+      const isValidSessionId = /^(cs_|pi_)/.test(pathSessionId)
+      if (!isValidSessionId) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+    }
   }
 
-  // Check if the request is for the success or cancel page
-  const isSuccessPage = request.nextUrl.pathname === '/payment/success';
-  const isCancelPage = request.nextUrl.pathname === '/payment/cancel';
-
-  if ((isSuccessPage || isCancelPage) && !request.nextUrl.searchParams.has('session_id')) {
-    // If session_id is missing, return 404
-    return NextResponse.rewrite(new URL('/404', request.url));
-  }
-
-  return response;
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/', '/payment/success', '/payment/cancel'],
-};
+  matcher: [
+    '/payment/:path*',
+  ],
+}

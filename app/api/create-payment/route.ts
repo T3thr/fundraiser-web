@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
           },
           mode: 'payment',
           success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
+          cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel?session_id={CHECKOUT_SESSION_ID}`,
         });
 
         paymentRecord = await PaymentModel.create({

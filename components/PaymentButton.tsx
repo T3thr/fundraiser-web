@@ -1,4 +1,3 @@
-// Fixed PaymentButton.tsx with proper template literals and routing
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PaymentMethodSelector from './PaymentMethodSelector';
@@ -17,6 +16,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
 
   useEffect(() => {
@@ -41,13 +41,12 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
 
   const handlePayment = async () => {
     try {
+      setError(null);
       setIsProcessing(true);
 
       const response = await fetch('/api/create-payment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: calculatedAmount,
           studentId,
@@ -63,88 +62,142 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
         throw new Error(data.error || 'Payment initiation failed');
       }
 
-      switch (selectedMethod) {
-        case 'bank_transfer':
-          router.push(`/payment/bank-transfer/${data.paymentId}`);
-          break;
-        case 'truemoney':
-          router.push(`/payment/truemoney/${data.paymentId}`);
-          break;
-        case 'rabbit_linepay':
-          router.push(`/payment/rabbit-linepay/${data.paymentId}`);
-          break;
-        case 'card':
-        case 'promptpay':
-          router.push(`/payment/${data.sessionId}`);
-          break;
-        default:
-          router.push(data.redirectUrl);
-      }
+      const redirectMap = {
+        bank_transfer: `/payment/bank-transfer/${data.paymentId}`,
+        truemoney: `/payment/truemoney/${data.paymentId}`,
+        rabbit_linepay: `/payment/rabbit-linepay/${data.paymentId}`,
+        card: `/payment/${data.sessionId}`,
+        promptpay: `/payment/${data.sessionId}`,
+      };
+
+      router.push(redirectMap[selectedMethod] || data.redirectUrl);
     } catch (error) {
-      console.error('Payment initiation failed:', error);
-      // Add error handling here
+      setError(error instanceof Error ? error.message : 'Payment failed');
+      console.error('Payment error:', error);
     } finally {
       setIsProcessing(false);
-      setIsModalOpen(false);
     }
   };
 
   return (
-    <>
+    <div className="relative">
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={!isOverdue || isProcessing}
-        className={`px-2 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
-          isOverdue
-            ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-800 dark:text-red-300 dark:hover:bg-red-700'
-            : 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-800 dark:text-green-300 dark:hover:bg-green-700'
-        }`}
+        className={`
+          relative px-3 py-1.5 rounded-md text-sm font-medium
+          transition-all duration-200 ease-in-out
+          focus:outline-none focus:ring-2 focus:ring-offset-2
+          disabled:opacity-50 disabled:cursor-not-allowed
+          group hover:shadow-md
+          ${isOverdue 
+            ? 'bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 dark:bg-red-800 dark:text-red-200 dark:hover:bg-red-700'
+            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 focus:ring-emerald-500 dark:bg-emerald-800 dark:text-emerald-200 dark:hover:bg-emerald-700'
+          }
+        `}
       >
-        {isProcessing ? (
-          <span className="flex items-center space-x-1">
-            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span>Processing...</span>
-          </span>
-        ) : isOverdue ? (
-          'Pay Now'
-        ) : (
-          `${amount} ฿`
-        )}
+        <span className="flex items-center space-x-1 justify-center">
+          {isProcessing ? (
+            <>
+              <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              {isOverdue ? (
+                <>
+                  <span>Pay</span>
+
+                </>
+              ) : (
+                <span>{amount} ฿</span>
+              )}
+            </>
+          )}
+        </span>
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-2xl w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Select Payment Method</h3>
-            <PaymentMethodSelector
-              selectedMethod={selectedMethod}
-              onMethodSelect={setSelectedMethod}
-            />
-            <div className="mt-6 flex justify-end space-x-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePayment}
-                disabled={isProcessing}
-                className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {isProcessing ? 'Processing...' : 'Continue to Payment'}
-              </button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full mx-4 shadow-xl transform transition-all animate-slideIn">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Payment Details
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                  aria-label="Close payment details modal" // Adding accessible label
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6 space-y-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Student ID:</span>
+                  <span className="font-medium">{studentId}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Period:</span>
+                  <span className="font-medium">{month} {year}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                  <span className="font-medium">{calculatedAmount} ฿</span>
+                </div>
+              </div>
+
+              <PaymentMethodSelector
+                selectedMethod={selectedMethod}
+                onMethodSelect={setSelectedMethod}
+              />
+
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-200 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 
+                    dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600
+                    transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={isProcessing}
+                  className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-colors duration-200 flex items-center space-x-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <span>Proceed to Payment</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 // @/backend/lib/constants.ts
 export const PAYMENT_CONFIGS = {
-    CURRENT_MONTH_FEE: 70,
+    CURRENT_MONTH_FEE: 10,
     LATE_PAYMENT_FEE: 80,
     CURRENCY: 'thb',
     SHEET_NAME: 'รายชื่อ67',

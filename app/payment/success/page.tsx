@@ -3,27 +3,80 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
+
+interface PaymentStatus {
+  isValid: boolean;
+  isLoading: boolean;
+  error?: string;
+}
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
   const sessionId = searchParams.get('session_id');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({
+    isValid: false,
+    isLoading: true
+  });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          router.push('/');
-          return 0;
+    const verifySession = async () => {
+      try {
+        if (!sessionId) {
+          throw new Error('Invalid session');
         }
-        return prev - 1;
-      });
-    }, 1000);
 
-    return () => clearInterval(timer);
-  }, [router]);
+        const response = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Invalid payment session');
+        }
+
+        const data = await response.json();
+        setPaymentStatus({ isValid: true, isLoading: false });
+
+        // Start countdown only after verification
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              router.push('/');
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        return () => clearInterval(timer);
+      } catch (error) {
+        setPaymentStatus({
+          isValid: false,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Payment verification failed'
+        });
+        router.push('/');
+      }
+    };
+
+    verifySession();
+  }, [sessionId, router]);
+
+  if (paymentStatus.isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!paymentStatus.isValid) {
+    return null; // Will be redirected by useEffect
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
