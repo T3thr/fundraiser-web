@@ -16,7 +16,9 @@ async function updateGoogleSheets(payment: any) {
     return true;
   } catch (error) {
     console.error('Google Sheets update error:', error);
-    throw error;
+    // Don't throw the error - we want the payment to be marked as complete
+    // even if Google Sheets update fails
+    return false;
   }
 }
 
@@ -43,7 +45,7 @@ async function verifyAndUpdatePayment(sessionId: string) {
     throw new Error('Payment record not found');
   }
 
-  // Update Google Sheets
+  // Try to update Google Sheets, but don't block payment completion
   await updateGoogleSheets(payment);
 
   return payment;
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     await mongodbConnect();
 
-    // Check if payment exists and isn't already completed
+    // Check if payment exists
     const existingPayment = await PaymentModel.findOne({ sessionId });
     if (!existingPayment) {
       return NextResponse.json(
@@ -71,6 +73,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // If payment is already completed, return success
     if (existingPayment.status === 'completed') {
       return NextResponse.json({ success: true, alreadyCompleted: true });
     }
@@ -92,7 +95,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Payment verification error:', error);
     return NextResponse.json(
-      { error: 'Payment verification failed' },
+      { 
+        error: error instanceof Error ? error.message : 'Payment verification failed',
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

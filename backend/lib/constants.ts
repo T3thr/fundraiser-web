@@ -16,3 +16,33 @@ export const PAYMENT_CONFIGS = {
     SUCCESS_URL: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
     CANCEL_URL: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
   } as const;
+
+export const MONTH_MAPPINGS = {
+  // English to Thai
+  january: 'มกราคม',
+  february: 'กุมภาพันธ์',
+  march: 'มีนาคม',
+  april: 'เมษายน',
+  may: 'พฤษภาคม',
+  june: 'มิถุนายน',
+  july: 'กรกฎาคม',
+  august: 'สิงหาคม',
+  september: 'กันยายน',
+  october: 'ตุลาคม',
+  november: 'พฤศจิกายน',
+  december: 'ธันวาคม',
+  
+  // Thai to column mapping
+  'มกราคม': 'K',
+  'กุมภาพันธ์': 'L',
+  'มีนาคม': 'M',
+  'เมษายน': 'N',
+  'พฤษภาคม': 'O',
+  'มิถุนายน': 'P',
+  'กรกฎาคม': 'E',
+  'สิงหาคม': 'F',
+  'กันยายน': 'G',
+  'ตุลาคม': 'H',
+  'พฤศจิกายน': 'I',
+  'ธันวาคม': 'J'
+};
