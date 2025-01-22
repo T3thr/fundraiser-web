@@ -38,7 +38,7 @@ export default function PaymentSuccessPage() {
           throw new Error('Invalid payment session');
         }
 
-        const data = await response.json();
+
         setPaymentStatus({ isValid: true, isLoading: false });
 
         // Start countdown only after verification
