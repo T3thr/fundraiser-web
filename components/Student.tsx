@@ -12,6 +12,7 @@ interface StudentProps {
 
 export default function Student({ students }: StudentProps) {
   const [filteredStudents, setFilteredStudents] = useState(students);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
 
   const months = [
     { name: 'July', year: 2024 },
@@ -35,6 +36,14 @@ export default function Student({ students }: StudentProps) {
     setFilteredStudents(filtered);
   };
 
+  const handleMonthSelection = (month: string) => {
+    setSelectedMonths((prev) =>
+      prev.includes(month)
+        ? prev.filter((m) => m !== month)
+        : [...prev, month]
+    );
+  };
+
   const formatPaymentStatus = (value: string | undefined, studentId: string, month: string, year: number, rowNumber: number) => {
     if (!rowNumber) {
       return <span className="font-medium">{value}</span>;
@@ -54,6 +63,9 @@ export default function Student({ students }: StudentProps) {
         month={month}
         year={year}
         isOverdue={isOverdue}
+        studentName={students.find((s) => s.id === studentId)?.name || ''}
+        selectedMonths={selectedMonths}
+        onMonthSelection={handleMonthSelection}
       />
     );
   };
