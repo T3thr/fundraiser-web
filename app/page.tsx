@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Student from '@/components/Student';
 import { sheetsService } from '@/backend/lib/googleSheets';
-import { Loader2, ExternalLink, Mail, Github, Linkedin, MessageCircle, Facebook, Instagram } from 'lucide-react';
+import { Loader2, ExternalLink, Mail, MessageCircle, Facebook } from 'lucide-react';
 
 async function getStudentData() {
   try {

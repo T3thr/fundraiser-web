@@ -14,7 +14,7 @@ interface PaymentButtonProps {
   onMonthSelection: (month: string) => void;
 }
 
-export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName, selectedMonths, onMonthSelection }: PaymentButtonProps) {
+export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName,  }: PaymentButtonProps) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
