@@ -1,3 +1,4 @@
+// app/api/create-payment/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/backend/lib/stripe';
 import mongodbConnect from '@/backend/lib/mongodb';
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
             year,
           },
           mode: 'payment',
-          expires_at: Math.floor(Date.now() / 1000) + (PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES * 60),
+          expires_at: Math.floor(Date.now() / 1000) + PAYMENT_CONFIGS.SESSION_EXPIRATION.DURATION,
           success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel?session_id={CHECKOUT_SESSION_ID}`,
         });
@@ -49,12 +50,12 @@ export async function POST(req: NextRequest) {
           sessionId: session.id,
           status: 'pending',
           paymentMethod,
-          expiresAt: new Date(Date.now() + (PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES * 60 * 1000)),
+          expiresAt: new Date(Date.now() + PAYMENT_CONFIGS.SESSION_EXPIRATION.DURATION * 1000),
         });
 
         sessionData = { 
           sessionId: session.id,
-          expiresIn: PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES 
+          expiresIn: PAYMENT_CONFIGS.SESSION_EXPIRATION.TEXT
         };
         break;
       }

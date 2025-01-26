@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import { PaymentMethod } from '@/types/payment';
+import { PAYMENT_CONFIGS } from '@/backend/lib/constants';
 
 interface PaymentButtonProps {
   amount: number;
@@ -12,16 +13,16 @@ interface PaymentButtonProps {
   studentName: string;
   selectedMonths: string[];
   onMonthSelection: (month: string) => void;
-  expiresIn?: number;
 }
 
-export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName, expiresIn = 30 }: PaymentButtonProps) {
+export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName }: PaymentButtonProps) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
+  const [expirationText, setExpirationText] = useState<string | null>(null);
 
   useEffect(() => {
     const calculateAmount = () => {
@@ -50,6 +51,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       document.body.style.overflow = 'auto';
     }
   }, [isModalOpen]);
+  
 
   const handlePayment = async () => {
     try {
@@ -73,6 +75,9 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       if (!response.ok) {
         throw new Error(data.error || 'Payment initiation failed');
       }
+
+      // Set the expiration text from constants
+      setExpirationText(PAYMENT_CONFIGS.SESSION_EXPIRATION.TEXT);
 
       const redirectMap = {
         bank_transfer: `/payment/bank-transfer/${data.paymentId}`,
@@ -149,7 +154,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Payment Validity:</span>
                   <span className="font-medium text-red-600">
-                    เมื่อไปยังหน้าชำระแล้วโปรดชำระภายใน {expiresIn} นาที
+                    เมื่อไปยังหน้าชำระแล้วโปรดชำระภายใน {PAYMENT_CONFIGS.SESSION_EXPIRATION.TEXT} นาที
                   </span>
                 </div>
               </div>

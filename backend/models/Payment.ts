@@ -25,7 +25,7 @@ const paymentSchema = new mongoose.Schema({
   metadata: { type: Map, of: String },
   verificationImage: String,
   verificationDate: Date,
-  expiresAt: { type: Date },
+  expiresAt: { type: Date, expires: 0 },
 }, {
   timestamps: true
 });

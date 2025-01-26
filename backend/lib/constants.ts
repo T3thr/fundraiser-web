@@ -15,8 +15,8 @@ export const PAYMENT_CONFIGS = {
     EXPIRED: 'expired'
   } as const,
   SESSION_EXPIRATION: {
-    CHECKOUT_TIMEOUT_MINUTES: 30,
-    DATABASE_CLEANUP_HOURS: 1
+    DURATION: 30 * 60, // 15 minutes in seconds
+    TEXT: '30'
   },
   SUCCESS_URL: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
   CANCEL_URL: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
