@@ -121,34 +121,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-export async function cleanupExpiredSessions() {
-    try {
-      await mongodbConnect();
-      
-      // Find and update expired pending sessions
-      const expiredSessions = await PaymentModel.find({
-        status: 'pending',
-        expiresAt: { $lt: new Date() }
-      });
-  
-      for (const session of expiredSessions) {
-        // Cancel Stripe session if it exists
-        if (session.sessionId) {
-          try {
-            await stripe.checkout.sessions.expire(session.sessionId);
-          } catch (stripeError) {
-            console.error('Error expiring Stripe session:', stripeError);
-          }
-        }
-  
-        // Update session status
-        session.status = 'expired';
-        await session.save();
-      }
-  
-      console.log(`Cleaned up ${expiredSessions.length} expired sessions`);
-    } catch (error) {
-      console.error('Error in session cleanup:', error);
-    }
-  }
