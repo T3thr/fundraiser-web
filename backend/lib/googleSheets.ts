@@ -135,19 +135,19 @@ export class GoogleSheetsService {
   async updatePaymentStatus(studentId: string, month: string, amount: number): Promise<boolean> {
     try {
       await this.ensureAuthenticated();
-
+  
       const thaiMonth = this.convertMonthNameToThai(month);
       const column = MONTH_MAPPINGS[thaiMonth as keyof typeof MONTH_MAPPINGS];
       
       if (!column) {
         throw new Error(`Invalid Thai month mapping: ${thaiMonth}`);
       }
-
+  
       // Find student row with retry mechanism
       let attempts = 0;
       const maxAttempts = 3;
       let students;
-
+  
       while (attempts < maxAttempts) {
         try {
           students = await this.getStudents();
@@ -158,19 +158,29 @@ export class GoogleSheetsService {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
         }
       }
-
+  
       if (!students) {
         throw new Error('Failed to fetch student data');
       }
-
+  
       const studentIndex = students.findIndex(s => s.id === studentId);
       if (studentIndex === -1) {
         throw new Error(`Student with ID ${studentId} not found`);
       }
-
+  
       const rowNumber = studentIndex + 6;
       const range = `${this.SHEET_NAME}!${column}${rowNumber}`;
-
+  
+      // Get the last row in the payment record sheet
+      const paymentRecordResponse = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.SPREADSHEET_ID,
+        range: 'payment_record!A:A',
+        majorDimension: 'COLUMNS'
+      });
+  
+      // Calculate the next available row (add 1 to account for header)
+      const nextRow = (paymentRecordResponse.data.values?.[0]?.length || 0) + 1;
+  
       // Batch update both main sheet and payment record
       const batchUpdateRequest = {
         spreadsheetId: this.SPREADSHEET_ID,
@@ -182,7 +192,7 @@ export class GoogleSheetsService {
               values: [[amount.toString()]]
             },
             {
-              range: 'payment_record!A:D',
+              range: `payment_record!A${nextRow}:D${nextRow}`,
               values: [[
                 new Date().toISOString(),
                 studentId,
@@ -193,7 +203,7 @@ export class GoogleSheetsService {
           ]
         }
       };
-
+  
       await this.sheets.spreadsheets.values.batchUpdate(batchUpdateRequest);
       return true;
     } catch (error) {
