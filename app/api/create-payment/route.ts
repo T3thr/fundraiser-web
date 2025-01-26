@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
             year,
           },
           mode: 'payment',
+          expires_at: Math.floor(Date.now() / 1000) + (PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES * 60),
           success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel?session_id={CHECKOUT_SESSION_ID}`,
         });
@@ -48,9 +49,13 @@ export async function POST(req: NextRequest) {
           sessionId: session.id,
           status: 'pending',
           paymentMethod,
+          expiresAt: new Date(Date.now() + (PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES * 60 * 1000)),
         });
 
-        sessionData = { sessionId: session.id };
+        sessionData = { 
+          sessionId: session.id,
+          expiresIn: PAYMENT_CONFIGS.SESSION_EXPIRATION.CHECKOUT_TIMEOUT_MINUTES 
+        };
         break;
       }
 
@@ -115,3 +120,34 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function cleanupExpiredSessions() {
+    try {
+      await mongodbConnect();
+      
+      // Find and update expired pending sessions
+      const expiredSessions = await PaymentModel.find({
+        status: 'pending',
+        expiresAt: { $lt: new Date() }
+      });
+  
+      for (const session of expiredSessions) {
+        // Cancel Stripe session if it exists
+        if (session.sessionId) {
+          try {
+            await stripe.checkout.sessions.expire(session.sessionId);
+          } catch (stripeError) {
+            console.error('Error expiring Stripe session:', stripeError);
+          }
+        }
+  
+        // Update session status
+        session.status = 'expired';
+        await session.save();
+      }
+  
+      console.log(`Cleaned up ${expiredSessions.length} expired sessions`);
+    } catch (error) {
+      console.error('Error in session cleanup:', error);
+    }
+  }

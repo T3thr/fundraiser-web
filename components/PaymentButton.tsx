@@ -12,9 +12,10 @@ interface PaymentButtonProps {
   studentName: string;
   selectedMonths: string[];
   onMonthSelection: (month: string) => void;
+  expiresIn?: number;
 }
 
-export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName,  }: PaymentButtonProps) {
+export default function PaymentButton({ amount, studentId, month, year, isOverdue, studentName, expiresIn = 30 }: PaymentButtonProps) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('card');
@@ -143,6 +144,13 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Amount:</span>
                   <span className="font-medium">{calculatedAmount} ฿</span>
+                </div>
+                {/* แสดงเวลาหมดอายุ */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Payment Validity:</span>
+                  <span className="font-medium text-red-600">
+                    เมื่อไปยังหน้าชำระแล้วโปรดชำระภายใน {expiresIn} นาที
+                  </span>
                 </div>
               </div>
 

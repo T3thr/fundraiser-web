@@ -27,7 +27,7 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
         type="text"
         value={query}
         onChange={handleSearch}
-        placeholder="Search by student name or ID..."
+        placeholder="ค้นหาจากรหัสนิสิตหรือชื่อ..."
         className="w-full px-4 py-2 pl-10 border rounded-lg text-sm focus:ring-primary focus:border-primary dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
       />
       <Search className="absolute left-3 top-2.5 text-gray-400 w-5 h-5" />

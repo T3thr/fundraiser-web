@@ -13,7 +13,10 @@ export default function PaymentCancelPage() {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          router.push('/');
+          // Use a small timeout to navigate after rendering
+          setTimeout(() => {
+            router.push('/');
+          }, 0);
           return 0;
         }
         return prev - 1;

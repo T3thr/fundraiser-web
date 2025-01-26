@@ -31,7 +31,8 @@ export default function Student({ students }: StudentProps) {
     const filtered = students.filter(
       (student) =>
         student.name.toLowerCase().includes(lowerQuery) ||
-        student.id.toLowerCase().includes(lowerQuery)
+        student.id.toLowerCase().includes(lowerQuery) ||
+        student.nickname.toLowerCase().includes(lowerQuery)
     );
     setFilteredStudents(filtered);
   };
@@ -77,17 +78,17 @@ export default function Student({ students }: StudentProps) {
         <table className="min-w-full text-sm text-gray-800 dark:text-gray-200">
           <thead>
             <tr className="bg-gradient-to-r from-indigo-800 to-indigo-900 dark:from-gray-900 dark:to-gray-800 text-white">
-              <th className="p-4 text-left border-r-2 " colSpan={4}>Information</th>
-              <th className="p-4 text-center border-r-2 " colSpan={9}>Monthly Payments</th>
+              <th className="p-4 text-left border-r-0 " colSpan={4}>Information</th>
+              <th className="p-4 text-center border-r-0 " colSpan={9}>Month-Year</th>
               <th className="p-4 text-center ">Status</th>
             </tr>
           </thead>
           <thead>
             <tr className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs uppercase sticky -top-3 pt-20 z-30">
               <th className="p-4 text-center">No.</th>
-              <th className="p-4 pr-40 text-left">Name</th>
-              <th className="p-4 -pr-6 text-left sticky left-0 bg-indigo-100 dark:bg-indigo-900 z-10">Nickname</th>
-              <th className="p-4 text-left border-r-2">Student ID</th>
+              <th className="p-4 pr-40 text-left">ชื่อ</th>
+              <th className="p-4 -pr-6 text-left sticky left-0 bg-indigo-100 dark:bg-indigo-900 z-10">ชื่อเล่น</th>
+              <th className="p-4 text-left border-r-2">รหัสนิสิต</th>
               {months.map(({ name, year }) => (
                 <th key={`${name}-${year}`} className="p-4 text-center">
                   {`${name.slice(0, 3)} ${year}`}
@@ -109,7 +110,7 @@ export default function Student({ students }: StudentProps) {
                 <td className="p-4 text-center font-medium">{student.no}</td>
                 <td className="p-4">{student.name}</td>
                 <td className={`p-4 sticky left-0 z-10 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-800 hover:bg-indigo-100 dark:hover:bg-indigo-900' : 'bg-white dark:bg-gray-900 hover:bg-indigo-100 dark:hover:bg-indigo-900'}`}>{student.nickname}</td>
-                <td className="p-4">{student.id}</td>
+                <td className="p-4 ">{student.id}</td>
                 {months.map(({ name, year }) => (
                   <td key={`${student.id}-${name}`} className="p-4 text-center">
                     {typeof student[name.toLowerCase().slice(0, 3) as keyof StudentData] === 'string' &&
