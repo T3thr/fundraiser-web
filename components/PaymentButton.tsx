@@ -22,7 +22,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
-  const [ setExpirationText] = useState<string | null>(null);
+  const [expirationText, setExpirationText] = useState<string | null>(null);
 
   useEffect(() => {
     const calculateAmount = () => {
@@ -101,8 +101,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
       <button
         onClick={() => setIsModalOpen(true)}
         disabled={!isOverdue || isProcessing}
-        className={`
-          relative px-3 py-1.5 rounded-md text-sm font-medium
+        className={`relative px-3 py-1.5 rounded-md text-sm font-medium
           transition-all duration-200 ease-in-out
           focus:outline-none focus:ring-2 focus:ring-offset-2
           disabled:opacity-50 disabled:cursor-not-allowed
@@ -150,11 +149,11 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
                   <span className="text-gray-600 dark:text-gray-400">Amount:</span>
                   <span className="font-medium">{calculatedAmount} ฿</span>
                 </div>
-                {/* แสดงเวลาหมดอายุ */}
+                {/* Display expiration text */}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Payment Validity:</span>
                   <span className="font-medium text-red-600">
-                    เมื่อไปยังหน้าชำระแล้วโปรดชำระภายใน {PAYMENT_CONFIGS.SESSION_EXPIRATION.TEXT} นาที
+                    {expirationText} เมื่อไปยังหน้าชำระแล้วโปรดชำระภายใน {PAYMENT_CONFIGS.SESSION_EXPIRATION.TEXT} นาที
                   </span>
                 </div>
               </div>
