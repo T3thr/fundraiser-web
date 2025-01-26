@@ -22,7 +22,7 @@ export default function PaymentButton({ amount, studentId, month, year, isOverdu
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [calculatedAmount, setCalculatedAmount] = useState(amount);
-  const [expirationText, setExpirationText] = useState<string | null>(null);
+  const [ setExpirationText] = useState<string | null>(null);
 
   useEffect(() => {
     const calculateAmount = () => {

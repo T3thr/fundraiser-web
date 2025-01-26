@@ -1,11 +1,10 @@
 // app/api/cleanup-expired-payments/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { stripe } from '@/backend/lib/stripe';
 import mongodbConnect from '@/backend/lib/mongodb';
 import { PaymentModel } from '@/backend/models/Payment';
-import { PAYMENT_CONFIGS } from '@/backend/lib/constants';
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     await mongodbConnect();
 
