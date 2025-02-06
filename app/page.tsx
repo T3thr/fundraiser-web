@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Student from '@/components/Student';
+import LeaderboardButton from '@/components/LeaderboardButton';
 import { sheetsService } from '@/backend/lib/googleSheets';
 import { Loader2, ExternalLink, Mail, MessageCircle, Facebook } from 'lucide-react';
 
@@ -17,9 +18,13 @@ export default async function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className='flex flex-col items-center justify-center'>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">
         CPE NU Fundraiser Payment Dashboard
-      </h1>
+      </h1>      
+      {/* Leaderboard Button Component */}
+      <LeaderboardButton students={students} />
+      </div>
       <Suspense
         fallback={
           <div className="flex justify-center items-center">
@@ -27,6 +32,7 @@ export default async function Home() {
           </div>
         }
       >
+
         <Student
           students={students}
           onPaymentInitiate={async (month, studentId) => {
@@ -89,7 +95,7 @@ export default async function Home() {
           >
             <MessageCircle className="w-8 h-8 mb-4 text-primary group-hover:text-primary/80 transition-colors duration-300" />
             <span className="font-medium">Line</span>
-            <span className="text-sm text-muted-foreground">Add By QR Code</span>
+            <span className="text-sm text-muted-foreground">Add By ID</span>
           </a>
 
         </div>
